@@ -1,0 +1,35 @@
+# Set up scoring mesh
+/score/create/boxMesh 3DMesh
+/score/mesh/boxSize 9. 10. 9 cm
+/score/mesh/nBin 45 50 45
+/score/mesh/translate/xyz 0. 0. 0. cm
+/score/quantity/doseDeposit doseDep
+/score/filter/particle alphaFilter alpha
+/score/quantity/nOfSecondary gammasB
+/score/filter/particleWithKineticEnergy gammaBFilter 477 479 keV gamma 
+/score/quantity/nOfSecondary gammasH
+/score/filter/particleWithKineticEnergy gammaHFilter 2220 2230 keV gamma 
+/score/close
+
+/control/verbose 1
+/run/verbose 1
+/tracking/verbose 0
+/event/verbose 0
+
+/action/IAEAphspWriter/namePrefix ../phsp/cylinder_neucure
+/action/IAEAphspWriter/scoringBoundary physPhantom->physWorld
+
+/geometry/phantomType 1
+
+/run/initialize
+/run/setCut 1 mm
+
+/control/execute NeuCure.mac
+/gps/pos/centre 0. 0. 11. cm
+
+/run/printProgress 10000000
+/run/beamOn 1000000000
+
+/score/dumpQuantityToFile 3DMesh doseDep doseDepMesh.csv
+/score/dumpQuantityToFile 3DMesh gammasB gammasB.csv
+/score/dumpQuantityToFile 3DMesh gammasH gammasH.csv

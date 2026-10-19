@@ -1,0 +1,26 @@
+#================================================
+# Read a phase-space file as the primary source (no trimming).
+# From build/: ./phantoms_sim test-reader.mac [nThreads] [seed]
+# Reads the file written by test-writer.mac. Each Geant4 event replays one
+# original history: all of its records become primaries of that event.
+# Replace the phantom by your detector geometry; phantomType 4 = world only.
+#================================================
+/control/verbose 1
+/run/verbose 1
+/tracking/verbose 0
+/event/verbose 0
+
+/geometry/phantomType 4
+/action/IAEAphspReader/fileName   ../phsp/test_physPhantom_to_physWorld
+
+/run/initialize
+/run/setCut      1 mm
+
+/IAEAphspReader/verbose   0
+
+# Optional: split the file between independent jobs (job k of N reads 1/N of it)
+#/IAEAphspReader/numberOfParallelRuns 4   # N >= 1
+#/IAEAphspReader/parallelRun          1   # 1 <= k <= N
+
+/run/printProgress  100000
+/run/beamOn     1000000

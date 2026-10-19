@@ -1,0 +1,53 @@
+#================================================
+# Read a phase-space file with trimming: only selected records become
+# primaries. From build/: ./phantoms_sim test-trim.mac [nThreads] [seed]
+# Reads the file written by test-writer.mac.
+#
+# Filters (each switched on separately, all must pass; trimEnable is the
+# master switch):
+#   type       /IAEAphspReader/trimTypes        gamma, electron, positron,
+#                                               neutron, proton (or 1-5)
+#   energy     /IAEAphspReader/trimEnergyMin/Max  kinetic energy, [min, max]
+#   direction  /IAEAphspReader/trimDirectionMin/Max  (u, v, w) box
+#   position   /IAEAphspReader/trimAreaMin/Max  (x, y, z) box on the file's
+#                                               scoring surface
+# trimCompactEvents false keeps one Geant4 event per original history (empty
+# events allowed), so event counts keep their meaning in primaries of the
+# phase-space simulation. true skips histories with no accepted record.
+#
+# Example below: 478 keV boron-capture photons leaving towards -x.
+#================================================
+/control/verbose 1
+/run/verbose 1
+/tracking/verbose 0
+/event/verbose 0
+
+/geometry/phantomType 4
+/action/IAEAphspReader/fileName   ../phsp/test_physPhantom_to_physWorld
+
+/run/initialize
+/run/setCut      1 mm
+
+/IAEAphspReader/verbose   0
+
+/IAEAphspReader/trimEnable           true
+
+/IAEAphspReader/trimTypeEnable       true
+/IAEAphspReader/trimTypes            gamma
+
+/IAEAphspReader/trimEnergyEnable     true
+/IAEAphspReader/trimEnergyMin        468 keV
+/IAEAphspReader/trimEnergyMax        488 keV
+
+/IAEAphspReader/trimDirectionEnable  true
+/IAEAphspReader/trimDirectionMin     -1 -1 -1
+/IAEAphspReader/trimDirectionMax      0  1  1
+
+#/IAEAphspReader/trimAreaEnable      true
+#/IAEAphspReader/trimAreaMin         -9 -9 -10 cm
+#/IAEAphspReader/trimAreaMax          9  9  10 cm
+
+/IAEAphspReader/trimCompactEvents    false
+
+/run/printProgress  100000
+/run/beamOn     1000000

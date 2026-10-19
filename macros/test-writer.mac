@@ -1,0 +1,52 @@
+#================================================
+# BNCT neutron writer macro
+# Records phase space at the phantom -> World boundary
+# and dose distribution map for comparison
+# using the NeuCure neutron beam.
+# From build/ (create ../phsp first): ./phantoms_sim test-writer.mac [nThreads] [seed]
+# Writes ../phsp/test_physPhantom_to_physWorld.IAEA{phsp,header} (~1 M records)
+# and the mesh CSV files in build/. Read it back with test-reader.mac.
+#================================================
+
+/control/verbose 2
+/run/verbose 2
+/tracking/verbose 0
+/event/verbose 0
+
+# --- Scoring mesh set up (only records alpha dose)---
+/score/create/boxMesh 3DMesh
+/score/mesh/boxSize 9. 10. 9 cm
+/score/mesh/nBin 45 50 45
+/score/mesh/translate/xyz 0. 0. 0. cm
+/score/quantity/doseDeposit doseDep
+/score/filter/particle alphaFilter alpha
+# --- Scoring mesh set up true gamma origin
+/score/quantity/nOfSecondary gammasB
+/score/filter/particleWithKineticEnergy gammaBFilter 477 479 keV gamma 
+/score/quantity/nOfSecondary gammasH
+/score/filter/particleWithKineticEnergy gammaHFilter 2220 2230 keV gamma 
+/score/close
+
+
+# --- Phase-space output set-up ---
+/action/IAEAphspWriter/namePrefix  ../phsp/test
+/action/IAEAphspWriter/scoringBoundary physPhantom->physWorld
+
+# --- Phantom selection ---
+/geometry/phantomType 1
+
+# --- Run set-up ---
+/run/initialize
+/run/setCut 1 mm
+
+# --- Neutron beam selection ---
+/control/execute NeuCure.mac
+
+# --- Run the code ---
+/run/printProgress 1000000
+/run/beamOn 1000000
+
+# --- Save the dose mesh ---
+/score/dumpQuantityToFile 3DMesh doseDep doseDepMesh.csv
+/score/dumpQuantityToFile 3DMesh gammasB gammasB.csv
+/score/dumpQuantityToFile 3DMesh gammasH gammasH.csv

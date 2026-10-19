@@ -1,0 +1,6 @@
+build/
+phsp/
+*.IAEAphsp
+*.IAEAheader
+*.csv
+__pycache__/

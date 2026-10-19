@@ -1,0 +1,47 @@
+#================================================
+# Geometry and beam check without visualisation, any phantom
+#
+# Alias-driven like production-writer.mac. From build/, write a small wrapper:
+#   cat > geo.mac <<EOF
+#   /control/alias PHANTOM 2              # 0 sphere, 1 cylinder, 2/3 Snyder head
+#   /control/alias SCORE   physHead       # physPhantom (0, 1) or physHead (2, 3)
+#   /control/alias BEAMZ   9.5            # 11 (cylinder, sphere) or 9.5 (heads)
+#   /control/alias BEAM    NeuCure.mac    # or epithermalMIT.mac
+#   /control/alias PREFIX  ../phsp/check_snyder1_neucure
+#   /control/execute test-geometry.mac
+#   EOF
+#   ./phantoms_sim geo.mac > geomcheck.log 2>&1
+#   grep -E "Checking overlaps|Overlap|Primary start volumes|WARNING" geomcheck.log
+#   grep -A4 "Particle name" geomcheck.log | head -60      # beam start points
+# Run 0 (the 10-event beam printout) writes ..._physWorld.IAEA*, run 1 the small
+# phase space ..._physWorld_1.IAEA*; its .IAEAheader lists the particle counts.
+# What to expect: docs/GEOMETRY_AND_BEAMS.md.
+#================================================
+/control/verbose 2
+/run/verbose 1
+/tracking/verbose 0
+
+/action/IAEAphspWriter/namePrefix  {PREFIX}
+/action/IAEAphspWriter/scoringBoundary {SCORE}->physWorld
+
+/geometry/phantomType {PHANTOM}
+/run/numberOfThreads 8
+/run/initialize
+/run/setCut 1 mm
+
+# 1. Overlaps: the placement already prints "Checking overlaps for volume
+#    ... OK!" at /run/initialize; this re-checks the whole tree.
+/geometry/test/run
+
+/control/execute {BEAM}
+/gps/pos/centre 0. 0. {BEAMZ} cm
+
+# 2. Beam: print the sampled start point / direction / energy of 10 primaries.
+#    Expect z = 10 x BEAMZ mm, sqrt(x^2+y^2) < 60 mm, direction z-component < -0.966.
+/gps/verbose 2
+/run/beamOn 10
+/gps/verbose 0
+
+# 3. A small phase space (~2 M records, ~65 MB) to check the scoring boundary.
+/run/printProgress 200000
+/run/beamOn 2000000

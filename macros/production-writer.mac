@@ -1,0 +1,36 @@
+#================================================
+# Production chunk: phase space at the phantom's outer surface, any phantom.
+# Geometry and beam: docs/GEOMETRY_AND_BEAMS.md.
+# No scoring mesh (phase space only).
+#
+# Driven by aliases so one file serves every chunk and every phantom (e.g. for
+# a batch system: one job per chunk, each with its own seed). Write a wrapper
+# macro that defines them:
+#   /control/alias MACRODIR <build dir>     # where NeuCure.mac etc. live
+#   /control/alias BEAM     NeuCure.mac     # or epithermalMIT.mac
+#   /control/alias PREFIX   psf_neucure_chunk0001
+#   /control/alias NEVENTS  10000000
+#   /control/alias PHANTOM  1               # 0 sphere, 1 cylinder, 2/3 Snyder head (1/2 tumours)
+#   /control/alias SCORE    physPhantom     # outer volume: physPhantom (0, 1) or physHead (2, 3)
+#   /control/alias BEAMZ    11              # beam disc z [cm]: 1 cm above the phantom top
+#   /control/execute <build dir>/production-writer.mac
+# Threads and seed come from the command line: ./phantoms_sim <macro> <nThreads> <seed>
+#================================================
+/control/verbose 1
+/run/verbose 1
+/tracking/verbose 0
+
+/action/IAEAphspWriter/namePrefix  {PREFIX}
+/action/IAEAphspWriter/scoringBoundary {SCORE}->physWorld
+
+/geometry/phantomType {PHANTOM}
+/run/initialize
+/run/setCut 1 mm
+
+/control/execute {MACRODIR}/{BEAM}
+# The beam macros place the disc at z = 11 cm (cylinder and sphere tops are at
+# z = 10). Override the height for the phantom in use (Snyder head top: 8.5 cm).
+/gps/pos/centre 0. 0. {BEAMZ} cm
+
+/run/printProgress 1000000
+/run/beamOn {NEVENTS}
